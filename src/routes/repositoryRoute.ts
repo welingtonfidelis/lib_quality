@@ -10,12 +10,13 @@ const router = Router();
 const repositoryController = new RepositoryController();
 
 router.get(
-  '/repository/:project_name/issues',
+  '/repository/:owner/:project_name/issues',
   inputValidateRepositoryIssues,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { project_name: projectName } = req.params;
+      const { owner, project_name: projectName } = req.params;
       const repository: repositoryIssuesInterface = {
+        owner,
         projectName,
       };
 

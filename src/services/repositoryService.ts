@@ -2,7 +2,9 @@ import axios from 'axios';
 import { differenceInDays } from 'date-fns';
 
 import { repositoryIssueResponseInterface, repositoryIssuesInterface } from '../interfaces';
-import { RepositoryModel } from '../models';
+import { RepositoryRepository } from '../repositories';
+
+const repositoryRepository = new RepositoryRepository();
 
 const API_GITHUB_BASE_URL = process.env.GITHUB_API_BASE_URL;
 const API_GITHUB_TOKEN = process.env.GITHUB_AUTH_TOKEN;
@@ -10,12 +12,11 @@ const API_GITHUB_TOKEN = process.env.GITHUB_AUTH_TOKEN;
 class RepositoryService {
   async searchIssues(repository: repositoryIssuesInterface) {
     let totalAgeOpenIssues: number = 0;
-    const owner = 'facebook';
-    const projectName = 'react';
+    const { owner, projectName } = repository;
     const perPage: number = 100;
     const openIssues: Array<number> = [];
 
-    await this.updateOrCreateDataBaseRegister(repository.projectName);
+    await this.updateOrCreateDataBaseRegister(owner, projectName);
 
     const {
       data: repoResponse,
@@ -42,7 +43,7 @@ class RepositoryService {
     const openIssuesDeviation = this.standardDeviation(openIssuesAverage, openIssues);
 
     const response = {
-      repository: repository.projectName,
+      repository: projectName,
       open_issues: openIssues.length,
       open_issues_average_age: openIssuesAverage,
       open_issues_std_average: openIssuesDeviation,
@@ -53,7 +54,9 @@ class RepositoryService {
 
   private createArrayPages(limit: number) {
     const pages = [];
-    for (let i = 1; i <= limit; i += 1) {
+    const tratedLimit = limit || 1;
+
+    for (let i = 1; i <= tratedLimit; i += 1) {
       pages.push(i);
     }
 
@@ -94,29 +97,15 @@ class RepositoryService {
     );
   }
 
-  private async updateOrCreateDataBaseRegister(projectName: string) {
-    const repositoryExists = await RepositoryModel.findOne({
-      name: projectName,
-    });
+  private async updateOrCreateDataBaseRegister(owner: string, projectName: string) {
+    const repositoryExists = await repositoryRepository.showByName(projectName);
 
     if (repositoryExists) {
-      await RepositoryModel.findOneAndUpdate(
-        {
-          _id: repositoryExists._id,
-        },
-        {
-          $inc: { search_count: 1 },
-        },
-      );
+      const { _id: id } = repositoryExists;
+      await repositoryRepository.incrementSearchCountById(id);
     }
     else {
-      await RepositoryModel.create(
-        {
-          name: projectName,
-          active: true,
-          search_count: 1,
-        },
-      );
+      await repositoryRepository.create(owner, projectName);
     }
   }
 

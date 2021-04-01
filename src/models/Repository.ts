@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const Repository = new mongoose.Schema(
   {
+    owner: String,
     name: String,
     search_count: Number,
     active: Boolean,

@@ -1,5 +1,6 @@
 interface repositoryIssuesInterface {
-    projectName: string
+  owner: string,
+  projectName: string
 }
 
 export {
