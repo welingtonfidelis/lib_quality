@@ -1,14 +1,17 @@
 import axios from 'axios';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
 
-import { repositoryIssueResponseInterface, repositoryIssuesInterface } from '../interfaces';
+import {
+  noTratedIssuesInterface, repositoryIssueResponseInterface,
+  repositoryIssuesInterface,
+} from '../interfaces';
 import { RepositoryRepository } from '../repositories';
+import { stateIssuesEnum } from '../utils/enums/satateIssues';
 
 const repositoryRepository = new RepositoryRepository();
 
 const API_GITHUB_BASE_URL = process.env.GITHUB_API_BASE_URL;
 const API_GITHUB_TOKEN = process.env.GITHUB_AUTH_TOKEN;
-
 class RepositoryService {
   async searchIssues(repository: repositoryIssuesInterface) {
     let totalAgeOpenIssues: number = 0;
@@ -16,27 +19,27 @@ class RepositoryService {
     const perPage: number = 100;
     const openIssues: Array<number> = [];
 
-    await this.updateOrCreateDataBaseRegister(owner, projectName);
-
     const {
       data: repoResponse,
     } = await this.getRepositoryDetails(owner, projectName);
 
     if (repoResponse && repoResponse.open_issues) {
       const totalOpenIssues = repoResponse.open_issues;
-      const pages = this.createArrayPages(Math.round(totalOpenIssues / perPage));
+      const pages = this.createPagesArray(Math.round(totalOpenIssues / perPage));
 
       await Promise.all(
         pages.map(async (item) => {
           const {
             data: issuesResponse,
-          } = await this.getIssuesDetails(owner, projectName, item, perPage);
+          } = await this.getIssuesDetails(owner, projectName, item, perPage, stateIssuesEnum.OPEN);
 
           if (issuesResponse && issuesResponse.length) {
             totalAgeOpenIssues += this.issuesCalculate(issuesResponse, openIssues);
           }
         }),
       );
+
+      await this.updateOrCreateDataBaseRegister(owner, projectName);
     }
 
     const openIssuesAverage = totalAgeOpenIssues / openIssues.length;
@@ -52,7 +55,106 @@ class RepositoryService {
     return response;
   }
 
-  private createArrayPages(limit: number) {
+  async issuesStats() {
+    const activeRepositories = await repositoryRepository.indexActive();
+
+    const noTratedStats: any = {};
+    if (activeRepositories && activeRepositories.length) {
+      for (const repository of activeRepositories) {
+        const { owner, name: projectName } = repository;
+        const perPage: number = 100;
+
+        noTratedStats[projectName] = {};
+
+        const {
+          data: repoResponse,
+        } = await this.getRepositoryDetails(owner, projectName);
+
+        if (repoResponse && repoResponse.open_issues) {
+          const totalOpenIssues = repoResponse.open_issues;
+          const pages = this.createPagesArray(Math.round(totalOpenIssues / perPage));
+
+          await Promise.all(
+            pages.map(async (item) => {
+              const {
+                data: issuesResponse,
+              } = await this.getIssuesDetails(
+                owner, projectName, item, perPage, stateIssuesEnum.ALL,
+              );
+
+              if (issuesResponse && issuesResponse.length) {
+                noTratedStats[projectName] = this.mountNotratedIssues(issuesResponse);
+              }
+            }),
+          );
+        }
+      }
+    }
+
+    const data = {
+      repositories: this.createArrayRepositoriesStats(noTratedStats),
+    };
+
+    return data;
+  }
+
+  // =====> PRIVATE METHODOS <===== //
+
+  private mountNotratedIssues(
+    issuesResponse: Array<repositoryIssueResponseInterface>,
+  ) {
+    const noTratedStats: noTratedIssuesInterface = {
+      issues: {},
+    };
+
+    for (const issue of issuesResponse) {
+      const { state, created_at: createdAt } = issue;
+      const date = format(new Date(createdAt), 'yyyy/MM/dd');
+
+      const issueExists = noTratedStats.issues[date];
+
+      if (!issueExists) {
+        noTratedStats.issues[date] = {
+          open: 0,
+          closed: 0,
+        };
+      }
+
+      noTratedStats.issues[date][state] += 1;
+    }
+
+    return noTratedStats;
+  }
+
+  private createArrayRepositoriesStats(noTratedStats: noTratedIssuesInterface) {
+    const convertedStats = Object.entries(noTratedStats);
+
+    const tratedStats = [];
+    for (const [repository, statsValue] of convertedStats) {
+      const { issues: noTratedIssues } = statsValue;
+      const convertedIssues: Array<any> = Object.entries(noTratedIssues);
+
+      const issues = [];
+      for (const [date, issueValue] of convertedIssues) {
+        const { open, closed } = issueValue;
+
+        issues.push({
+          created_at: date,
+          open,
+          closed,
+        });
+      }
+
+      tratedStats.push({
+        repository,
+        issues,
+      });
+    }
+
+    return tratedStats;
+  }
+
+  private createPagesArray(limit: number) {
     const pages = [];
     const tratedLimit = limit || 1;
 
@@ -68,8 +170,8 @@ class RepositoryService {
   ) {
     let totalAgeOpenIssues: number = 0;
 
-    for (let i = 0; i < responseData.length; i += 1) {
-      const { created_at: createdAt } = responseData[i];
+    for (const data of responseData) {
+      const { created_at: createdAt } = data;
       const difference = this.calcDifferenceInDays(new Date(createdAt));
       totalAgeOpenIssues += difference;
       openIssues.push(difference);
@@ -78,11 +180,14 @@ class RepositoryService {
     return totalAgeOpenIssues;
   }
 
-  private getIssuesDetails(owner: string, projectName: string, page: number, perPage: number) {
+  private getIssuesDetails(
+    owner: string, projectName: string, page: number,
+    perPage: number, state: stateIssuesEnum,
+  ) {
     return axios.get(
       `${API_GITHUB_BASE_URL}/repos/${owner}/${projectName}/issues`,
       {
-        params: { page, per_page: perPage, state: 'open' },
+        params: { page, per_page: perPage, state },
         headers: { Authorization: `token ${API_GITHUB_TOKEN}` },
       },
     );
@@ -111,8 +216,8 @@ class RepositoryService {
 
   private standardDeviation(average: number, allValues: Array<number>) {
     let deviation = 0;
-    for (let i = 0; i < allValues.length; i += 1) {
-      const v = allValues[i] - average;
+    for (const value of allValues) {
+      const v = value - average;
       deviation += v * v;
     }
 

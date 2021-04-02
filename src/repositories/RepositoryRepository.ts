@@ -1,6 +1,12 @@
 import { RepositoryModel } from '../models';
 
 class RepositoryRepository {
+  indexActive() {
+    return RepositoryModel.find({
+      active: true,
+    });
+  }
+
   showByName(name: string) {
     return RepositoryModel.findOne({
       name,

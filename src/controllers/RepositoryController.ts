@@ -7,6 +7,10 @@ class RepositoryController {
   searchIssues(repository: repositoryIssuesInterface) {
     return repositoryService.searchIssues(repository);
   }
+
+  issuesStats() {
+    return repositoryService.issuesStats();
+  }
 }
 
 export {

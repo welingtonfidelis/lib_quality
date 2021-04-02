@@ -2,7 +2,10 @@ import {
   NextFunction, Request, Response, Router,
 } from 'express';
 
-import { inputValidateRepositoryIssues } from '../middlewares';
+import {
+  inputValidateRepositoryIssues,
+  inputValidateRepositoryIssuesStats,
+} from '../middlewares';
 import { RepositoryController } from '../controllers';
 import { repositoryIssuesInterface } from '../interfaces';
 
@@ -21,6 +24,24 @@ router.get(
       };
 
       const data = await repositoryController.searchIssues(repository);
+
+      res.json({
+        status_code: 200,
+        message: 'success',
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+router.get(
+  '/repository/issues/stats',
+  inputValidateRepositoryIssuesStats,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await repositoryController.issuesStats();
 
       res.json({
         status_code: 200,
