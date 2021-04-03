@@ -4,6 +4,7 @@ declare global {
         GITHUB_AUTH_TOKEN: string;
         GITHUB_API_BASE_URL: string;
         MONGODB_URI: string;
+        MONGODB_TESTS_URI: string;
         NODE_ENV: string;
         PORT?: string;
       }

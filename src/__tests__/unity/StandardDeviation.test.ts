@@ -1,23 +1,13 @@
-import mongoose from 'mongoose';
+import { StandardDeviationService } from '../../services';
 
-import { RepositoryService } from '../../services';
-import utils from '../../utils/utils';
+describe('Unity tests: StandardDeviation', () => {
+  test('Should be able calculate standard desviation', () => {
+    const standardDeviationService = new StandardDeviationService();
+    const heightArray = [1.55, 1.70, 1.80];
+    const average = 1.68;
+    const deviationResult = standardDeviationService
+      .calculateStandardDeviation(average, heightArray);
 
-const repositoryService = new RepositoryService();
-
-describe('Repository', () => {
-  // beforeAll(async () => {
-  //   const url = 'mongodb://root:root@localhost:27017/test?authSource=admin';
-  //   await mongoose.connect(url, { useNewUrlParser: true });
-  // });
-
-  // afterAll(async () => {
-  //   await utils.dropAllCollections();
-
-  //   await mongoose.connection.close();
-  // });
-
-  test('Test', async () => {
-    expect(2 + 2).toBe(4);
+    expect(deviationResult).toBe(0.1028);
   });
 });

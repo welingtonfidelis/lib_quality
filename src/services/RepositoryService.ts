@@ -8,19 +8,20 @@ import {
 } from '../interfaces';
 import { RepositoryRepository } from '../repositories';
 import { stateIssuesEnum } from '../utils/enums/stateIssues';
-
-const repositoryRepository = new RepositoryRepository();
-const standardDeviationService = new StandardDeviationService();
+import { PagesService } from '.';
 
 const API_GITHUB_BASE_URL = process.env.GITHUB_API_BASE_URL;
 const API_GITHUB_TOKEN = process.env.GITHUB_AUTH_TOKEN;
 
 class RepositoryService {
   async searchIssues(repository: repositoryIssuesInterface) {
-    let totalTimeOfOpenIssues: number = 0;
+    const standardDeviationService = new StandardDeviationService();
+    const pagesService = new PagesService();
+
     const { owner, projectName } = repository;
     const perPage: number = 100;
     const openIssues: Array<number> = [];
+    let totalTimeOfOpenIssues: number = 0;
 
     const {
       data: repoResponse,
@@ -28,7 +29,8 @@ class RepositoryService {
 
     if (repoResponse && repoResponse.open_issues) {
       const totalOpenIssues = repoResponse.open_issues;
-      const pages = this.createPagesArray(Math.round(totalOpenIssues / perPage));
+      const pages = pagesService
+        .createPagesArrayFromLimitNumber(Math.round(totalOpenIssues / perPage));
 
       await Promise.all(
         pages.map(async (item) => {
@@ -37,7 +39,7 @@ class RepositoryService {
           } = await this.getIssuesDetails(owner, projectName, item, perPage, stateIssuesEnum.OPEN);
 
           if (issuesResponse && issuesResponse.length) {
-            totalTimeOfOpenIssues += this.issuesCalculate(issuesResponse, openIssues);
+            totalTimeOfOpenIssues += this.issuesTimeOpenCalculate(issuesResponse, openIssues);
           }
         }),
       );
@@ -60,6 +62,9 @@ class RepositoryService {
   }
 
   async issuesStats() {
+    const repositoryRepository = new RepositoryRepository();
+    const pagesService = new PagesService();
+
     const activeRepositories = await repositoryRepository.indexActive();
 
     const noTratedStats: any = {};
@@ -76,7 +81,8 @@ class RepositoryService {
 
         if (repoResponse && repoResponse.open_issues) {
           const totalOpenIssues = repoResponse.open_issues;
-          const pages = this.createPagesArray(Math.round(totalOpenIssues / perPage));
+          const pages = pagesService
+            .createPagesArrayFromLimitNumber(Math.round(totalOpenIssues / perPage));
 
           await Promise.all(
             pages.map(async (item) => {
@@ -158,18 +164,7 @@ class RepositoryService {
     return tratedStats;
   }
 
-  private createPagesArray(limit: number) {
-    const pages = [];
-    const tratedLimit = limit || 1;
-
-    for (let i = 1; i <= tratedLimit; i += 1) {
-      pages.push(i);
-    }
-
-    return pages;
-  }
-
-  private issuesCalculate(
+  private issuesTimeOpenCalculate(
     responseData: Array<repositoryIssueResponseInterface>, openIssues: Array<number>,
   ) {
     let totalTimeOfOpenIssues: number = 0;
@@ -207,6 +202,7 @@ class RepositoryService {
   }
 
   private async updateOrCreateDataBaseRegister(owner: string, projectName: string) {
+    const repositoryRepository = new RepositoryRepository();
     const repositoryExists = await repositoryRepository.showByName(projectName);
 
     if (repositoryExists) {

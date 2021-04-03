@@ -5,13 +5,16 @@ import { config } from 'dotenv';
 const path = resolve(__dirname, '../', 'enviroments', '.env');
 config({ path });
 
-const { MONGODB_URI } = process.env;
+const { MONGODB_URI, MONGODB_TESTS_URI, NODE_ENV } = process.env;
+const URL = NODE_ENV === 'test' ? MONGODB_TESTS_URI : MONGODB_URI;
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+export default async () => {
+  mongoose.connect(URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
 
-mongoose.set('useFindAndModify', false);
+  mongoose.set('useFindAndModify', false);
 
-module.exports = mongoose;
+  return mongoose;
+};
