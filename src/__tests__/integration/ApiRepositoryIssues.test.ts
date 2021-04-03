@@ -4,17 +4,20 @@ import mongoose from 'mongoose';
 
 import { app } from '../../app';
 import databaseConnection from '../../database/connection';
-import { DatabaseCollectionRepository } from '../../repositories';
+import { RepositoryRepository } from '../../repositories';
+
+const repositoryRepository = new RepositoryRepository();
 
 describe('RepositoryIsses', () => {
   beforeAll(async () => {
     await databaseConnection();
 
-    const databaseCollectionRepository = new DatabaseCollectionRepository();
-    await databaseCollectionRepository.dropAllCollections();
+    await repositoryRepository.removeAll();
   });
 
   afterAll(async () => {
+    await repositoryRepository.removeAll();
+
     await mongoose.connection.close();
   });
 

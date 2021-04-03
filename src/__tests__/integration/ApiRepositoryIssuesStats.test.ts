@@ -4,17 +4,20 @@ import mongoose from 'mongoose';
 
 import { app } from '../../app';
 import databaseConnection from '../../database/connection';
-import { DatabaseCollectionRepository, RepositoryRepository } from '../../repositories';
+import { RepositoryRepository } from '../../repositories';
+
+const repositoryRepository = new RepositoryRepository();
 
 describe('RepositoryIssuesStats', () => {
   beforeAll(async () => {
     await databaseConnection();
 
-    const databaseCollectionRepository = new DatabaseCollectionRepository();
-    await databaseCollectionRepository.dropAllCollections();
+    await repositoryRepository.removeAll();
   });
 
   afterAll(async () => {
+    await repositoryRepository.removeAll();
+
     await mongoose.connection.close();
   });
 
@@ -35,7 +38,6 @@ describe('RepositoryIssuesStats', () => {
   });
 
   test('Should be able get repositories list with issues group state', async () => {
-    const repositoryRepository = new RepositoryRepository();
     await repositoryRepository.create('octocat', 'Hello-World');
 
     const response = await request(app)

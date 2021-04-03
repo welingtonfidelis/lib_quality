@@ -39,10 +39,8 @@ class RepositoryRepository {
     );
   }
 
-  dropCollection() {
-    console.log('delll =>', RepositoryModel.collection);
-
-    return RepositoryModel.collection.drop();
+  removeAll() {
+    return RepositoryModel.deleteMany();
   }
 }
 
