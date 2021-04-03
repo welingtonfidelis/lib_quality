@@ -13,13 +13,17 @@ class RepositoryRepository {
     });
   }
 
-  incrementSearchCountById(id: string) {
+  async incrementSearchCountById(id: string) {
+    const {
+      search_count: searchCount,
+    } = await RepositoryModel.findOne({ _id: id });
+
     return RepositoryModel.findOneAndUpdate(
       {
         _id: id,
       },
       {
-        $inc: { search_count: 1 },
+        search_count: searchCount + 1,
       },
     );
   }

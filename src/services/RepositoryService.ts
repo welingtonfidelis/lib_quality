@@ -1,20 +1,23 @@
 import axios from 'axios';
 import { differenceInDays, format } from 'date-fns';
+import { StandardDeviationService } from './StandardDeviationService';
 
 import {
   noTratedIssuesInterface, repositoryIssueResponseInterface,
   repositoryIssuesInterface,
 } from '../interfaces';
 import { RepositoryRepository } from '../repositories';
-import { stateIssuesEnum } from '../utils/enums/satateIssues';
+import { stateIssuesEnum } from '../utils/enums/stateIssues';
 
 const repositoryRepository = new RepositoryRepository();
+const standardDeviationService = new StandardDeviationService();
 
 const API_GITHUB_BASE_URL = process.env.GITHUB_API_BASE_URL;
 const API_GITHUB_TOKEN = process.env.GITHUB_AUTH_TOKEN;
+
 class RepositoryService {
   async searchIssues(repository: repositoryIssuesInterface) {
-    let totalAgeOpenIssues: number = 0;
+    let totalTimeOfOpenIssues: number = 0;
     const { owner, projectName } = repository;
     const perPage: number = 100;
     const openIssues: Array<number> = [];
@@ -34,7 +37,7 @@ class RepositoryService {
           } = await this.getIssuesDetails(owner, projectName, item, perPage, stateIssuesEnum.OPEN);
 
           if (issuesResponse && issuesResponse.length) {
-            totalAgeOpenIssues += this.issuesCalculate(issuesResponse, openIssues);
+            totalTimeOfOpenIssues += this.issuesCalculate(issuesResponse, openIssues);
           }
         }),
       );
@@ -42,8 +45,9 @@ class RepositoryService {
       await this.updateOrCreateDataBaseRegister(owner, projectName);
     }
 
-    const openIssuesAverage = totalAgeOpenIssues / openIssues.length;
-    const openIssuesDeviation = this.standardDeviation(openIssuesAverage, openIssues);
+    const openIssuesAverage = totalTimeOfOpenIssues / openIssues.length;
+    const openIssuesDeviation = standardDeviationService
+      .calculateStandardDeviation(openIssuesAverage, openIssues);
 
     const response = {
       repository: projectName,
@@ -168,16 +172,16 @@ class RepositoryService {
   private issuesCalculate(
     responseData: Array<repositoryIssueResponseInterface>, openIssues: Array<number>,
   ) {
-    let totalAgeOpenIssues: number = 0;
+    let totalTimeOfOpenIssues: number = 0;
 
     for (const data of responseData) {
       const { created_at: createdAt } = data;
-      const difference = this.calcDifferenceInDays(new Date(createdAt));
-      totalAgeOpenIssues += difference;
+      const difference = this.calculateDifferenceInDays(new Date(createdAt));
+      totalTimeOfOpenIssues += difference;
       openIssues.push(difference);
     }
 
-    return totalAgeOpenIssues;
+    return totalTimeOfOpenIssues;
   }
 
   private getIssuesDetails(
@@ -214,17 +218,7 @@ class RepositoryService {
     }
   }
 
-  private standardDeviation(average: number, allValues: Array<number>) {
-    let deviation = 0;
-    for (const value of allValues) {
-      const v = value - average;
-      deviation += v * v;
-    }
-
-    return Math.sqrt(deviation / allValues.length);
-  }
-
-  private calcDifferenceInDays(compareDate: Date) {
+  private calculateDifferenceInDays(compareDate: Date) {
     return differenceInDays(new Date(), compareDate);
   }
 }
