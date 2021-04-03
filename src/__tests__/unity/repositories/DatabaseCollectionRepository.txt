@@ -1,0 +1,33 @@
+/* eslint-disable no-undef */
+import mongoose from 'mongoose';
+
+import databaseConnection from '../../../database/connection';
+import { DatabaseCollectionRepository, RepositoryRepository } from '../../../repositories';
+
+describe('Unity tests: DropAllDatabaseCollections', () => {
+  beforeAll(async () => {
+    await databaseConnection();
+  });
+
+  afterAll(async () => {
+    await mongoose.connection.close();
+  });
+
+  test('Should be able delete all database collections', async () => {
+    const repositoryRepository = new RepositoryRepository();
+    await repositoryRepository.create('test', 'test');
+
+    const collections1 = Object.keys(mongoose.connection.collections);
+
+    const databaseCollectionRepository = new DatabaseCollectionRepository();
+
+    await databaseCollectionRepository.dropAllCollections();
+
+    const collections2 = Object.keys(mongoose.connection.collections);
+
+    console.log('->', collections1, collections2);
+
+    expect(collections1.length).toBeGreaterThan(0);
+    // expect(collections2.length).toBe(0);
+  });
+});

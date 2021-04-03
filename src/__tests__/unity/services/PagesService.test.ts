@@ -1,7 +1,8 @@
-import { PagesService } from '../../services';
+/* eslint-disable no-undef */
+import { PagesService } from '../../../services';
 
-describe('Unity tests: Pages', () => {
-  test('Should be able create array of numbers from limit number', () => {
+describe('Unity tests: PagesService', () => {
+  test('Should be able to create array of numbers from limit number', () => {
     const pagesService = new PagesService();
     const limit = 3;
     const pagesArray = pagesService.createPagesArrayFromLimitNumber(limit);

@@ -9,6 +9,7 @@ import {
 import { RepositoryRepository } from '../repositories';
 import { stateIssuesEnum } from '../utils/enums/stateIssues';
 import { PagesService } from '.';
+import { AppError } from '../errors';
 
 const API_GITHUB_BASE_URL = process.env.GITHUB_API_BASE_URL;
 const API_GITHUB_TOKEN = process.env.GITHUB_AUTH_TOKEN;
@@ -179,26 +180,48 @@ class RepositoryService {
     return totalTimeOfOpenIssues;
   }
 
-  private getIssuesDetails(
+  private async getIssuesDetails(
     owner: string, projectName: string, page: number,
     perPage: number, state: stateIssuesEnum,
   ) {
-    return axios.get(
-      `${API_GITHUB_BASE_URL}/repos/${owner}/${projectName}/issues`,
-      {
-        params: { page, per_page: perPage, state },
-        headers: { Authorization: `token ${API_GITHUB_TOKEN}` },
-      },
-    );
+    try {
+      const data = await axios.get(
+        `${API_GITHUB_BASE_URL}/repos/${owner}/${projectName}/issues`,
+        {
+          params: { page, per_page: perPage, state },
+          headers: { Authorization: `token ${API_GITHUB_TOKEN}` },
+        },
+      );
+
+      return data;
+    } catch (error) {
+      const code = error.response.status || 500;
+      const message = error.response?.statusText
+        ? error.response.statusText
+        : 'Internal server error.';
+
+      throw new AppError(message, code);
+    }
   }
 
-  private getRepositoryDetails(owner: string, projectName: string) {
-    return axios.get(
-      `${API_GITHUB_BASE_URL}/repos/${owner}/${projectName}`,
-      {
-        headers: { Authorization: `token ${API_GITHUB_TOKEN}` },
-      },
-    );
+  private async getRepositoryDetails(owner: string, projectName: string) {
+    try {
+      const data = await axios.get(
+        `${API_GITHUB_BASE_URL}/repos/${owner}/${projectName}`,
+        {
+          headers: { Authorization: `token ${API_GITHUB_TOKEN}` },
+        },
+      );
+
+      return data;
+    } catch (error) {
+      const code = error.response.status || 500;
+      const message = error.response?.statusText
+        ? error.response.statusText
+        : 'Internal server error.';
+
+      throw new AppError(message, code);
+    }
   }
 
   private async updateOrCreateDataBaseRegister(owner: string, projectName: string) {

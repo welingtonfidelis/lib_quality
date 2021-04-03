@@ -1,6 +1,7 @@
-import { StandardDeviationService } from '../../services';
+/* eslint-disable no-undef */
+import { StandardDeviationService } from '../../../services';
 
-describe('Unity tests: StandardDeviation', () => {
+describe('Unity tests: StandardDeviationService', () => {
   test('Should be able calculate standard desviation', () => {
     const standardDeviationService = new StandardDeviationService();
     const heightArray = [1.55, 1.70, 1.80];
