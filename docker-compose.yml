@@ -1,0 +1,64 @@
+version: '3'
+
+services:
+    db:
+        image: 'mongo'
+        container_name: mongo_db_lib_quality_api
+        ports:
+            - '27017:27017'
+        volumes:
+            - ./data/db:/data/db
+        networks:   
+            lib-quality-compose-networks:
+                ipv4_address: 173.28.1.1
+
+    db-nosqlclient:
+        image: mongoclient/mongoclient
+        restart: always
+        container_name: mongoclient2
+        ports:
+            - '27019:3000'
+        depends_on:
+            - db
+        networks:   
+            lib-quality-compose-networks:
+                ipv4_address: 173.28.1.3
+        deploy:
+            resources:
+                limits:
+                    memory: 100M
+                reservations:
+                    memory: 20M
+    server:
+        container_name: lib_quality_api
+        build: '.'
+        volumes:
+            - ./:/node-app
+            - ./node_modules:/node-app/node_modules
+        env_file: src/enviroments/.env
+        environment:
+            NODE_ENV: development
+            GITHUB_AUTH_TOKEN: seu_github_token
+            GITHUB_API_BASE_URL: https://api.github.com
+            MONGODB_URI: mongodb://173.28.1.1:27017/libquality?authSource=admin
+            MONGODB_TESTS_URI: mongodb://173.28.1.1:27017/test?authSource=admin
+        depends_on:
+            - db
+        links:
+            - db
+        ports:
+            - '3001:3001'   
+        networks:   
+            lib-quality-compose-networks:
+                ipv4_address: 173.28.1.2
+
+networks: 
+    lib-quality-compose-networks:
+        ipam:
+            driver: default
+            config:
+                - subnet: 173.28.0.0/16
+
+volumes:
+    lib-quality-docker-data:
+        driver: local
