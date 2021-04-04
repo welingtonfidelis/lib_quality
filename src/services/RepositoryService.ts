@@ -195,10 +195,8 @@ class RepositoryService {
 
       return data;
     } catch (error) {
-      const code = error.response.status || 500;
-      const message = error.response?.statusText
-        ? error.response.statusText
-        : 'Internal server error.';
+      const code = error?.response?.status || 500;
+      const message = error?.response?.statusText || 'Internal server error.';
 
       throw new AppError(message, code);
     }
@@ -215,10 +213,8 @@ class RepositoryService {
 
       return data;
     } catch (error) {
-      const code = error.response.status || 500;
-      const message = error.response?.statusText
-        ? error.response.statusText
-        : 'Internal server error.';
+      const code = error?.response?.status || 500;
+      const message = error?.response?.statusText || 'Internal server error.';
 
       throw new AppError(message, code);
     }
