@@ -1,6 +1,12 @@
 # Lib_quality
 Este projeto foi construído com o objetivo de permitir que um usuário obtenha informações acerca de repoistórios públicos hospedados no github através de sua API pública ([GitHub_API]). Entre estas informações estão a quantidade de issues abertas, tempo médio em que foram criadas e quantidades de issues agrupadas por datas. Esta API foi construída em [Node.js] com uso de [TypeScript] e [MongoDB] (através da biblioteca [Mongoose]).
 
+## Arquitetura
+Abaixo está um rascunho da arquitetura seguida para construção da API.
+É importante ressaltar que até o momento, o projeto contempla apenas a Fase 1 e Fase 2 da arquitetura.
+
+![architecture](docs/lib_quality_architecture.png)
+
 ## Requisitos
 - [Node.js] - Node.js na versão 14 ou superior;
 - [MongoDB] - Instância do banco de dados MongoDB;
