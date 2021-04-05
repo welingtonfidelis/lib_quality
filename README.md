@@ -1,21 +1,21 @@
 # Lib_quality
-Este projeto foi construído com o objetivo de permitir que um usuário obtenhar informações acerca de repoistórios públicos hospedados no github através de sua API pública ([GitHub_API]). Entre estas informações estão a quantidade de issues abertas, tempo médio em que foram criadas e quantidades de issues agrupadas por datas. A API, que consome dados da API do GitHub foi construída em [Node.js] com uso de [TypeScript] e [MongoDB] (através da biblioteca [Mongoose]).
+Este projeto foi construído com o objetivo de permitir que um usuário obtenha informações acerca de repoistórios públicos hospedados no github através de sua API pública ([GitHub_API]). Entre estas informações estão a quantidade de issues abertas, tempo médio em que foram criadas e quantidades de issues agrupadas por datas. Esta API foi construída em [Node.js] com uso de [TypeScript] e [MongoDB] (através da biblioteca [Mongoose]).
 
 ## Requisitos
 - [Node.js] - Node.js na versão 14 ou superior;
 - [MongoDB] - Instância do banco de dados MongoDB;
 - [GitHub Auth Token] - Para executar um conjunto maior de requisições na API do GitHub, é necessário um token de autenticação, que pode ser obtido através da documentção oficial [aqui];
-- Cliente HTTP (OPCIONAL) - Um aplicativo cliente para requisições HTTP, como [Postman];
+- Cliente HTTP - Um aplicativo cliente para executar requisições HTTP, como [Postman];
 - [Docker] e [Docker-compose] (OPCIONAL) - O projeto possui possibilidade de ser executado em um container [Docker], juntamente com uma instância do banco [MongoDB].
 
 ## Instalação
 Após clonar este projeto e tendo em mãos seu token pessoal do GitHub, existem duas formas de executar a API, descritas abaixo.
 
 ### Container Docker
-Como apresentado na seção de Requisitos, este projeto possui a possibilidade de ser executado em um container. Pra isso, na raíz do projeto, encontre o arquivo `docker-compose.yml` e abra-o em qualquer editor de texto. Agora, encontre no arquivo a variável de ambiente com nome de `GITHUB_AUTH_TOKEN`, note que em seguida desta variável, existe um texto de exemplo, que deve ser substituído com seu [GitHub Auth Token], salve e feche o arquivo. Aindana raíz deste projeto, através de seu terminal de comandos e execute o seguinte comando *docker-compose up -d* e aguarde até que os containers sejam construídos e executados, disponibilizando o acesso à API no endereço **http://localhost:3001/api**.
+Como apresentado na seção de Requisitos, este projeto possui a possibilidade de ser executado em um container. Para isso, na raíz do projeto, encontre o arquivo `docker-compose.yml` e abra-o em qualquer editor de texto. Agora, encontre no arquivo a variável de ambiente com nome de `GITHUB_AUTH_TOKEN`, note que em seguida desta variável existe um texto de exemplo, que deve ser substituído com seu [GitHub Auth Token]. Ainda na raíz deste projeto, através de seu terminal de comandos, execute o seguinte comando *docker-compose up -d* e aguarde até que os containers sejam construídos e executados, disponibilizando o acesso à API no endereço **http://localhost:3001/api**.
 
 ### Em seu ambiente Node.js
-Para executar o projeto em seu ambiente, é necessário criar um arquivo `.env` contendo as variáveis de ambiente necessárias pro funcionamento da API. Para isso, cri o arquivo `.env` dentro do diretório `src/enviroments/` seguindo o exemplo do arquivo `.env.example`. Agora, com terminal de comandos apontando para a raíz do projeto, execute o comando *npm install* para que as dependências necessárias sejam baixadas e em seguida, execute o comando *npm run dev* para que o projeto seja executado, disponibilizando o acesso à API no endereço **http://localhost:3001/api**.
+Para executar o projeto em seu ambiente, é necessário criar um arquivo `.env` contendo as variáveis de ambiente necessárias para o funcionamento da API. Crie o arquivo `.env` dentro do diretório `src/enviroments/` seguindo o exemplo do arquivo `src/enviroments/.env.example`. Agora, com terminal de comandos apontando para a raíz do projeto, execute o comando *npm install* para que as dependências necessárias sejam baixadas e em seguida, execute o comando *npm run dev* para que o projeto seja executado, disponibilizando o acesso à API no endereço **http://localhost:3001/api**.
 
 É importante ressaltar que a porta em que a API é executada pode ser alterada no arquivo `src/server.ts` ou com a criação de uma variável de ambiente chamada **PORT** (container docker -> na seção **environment** do arquivo `docker-compose.yml`; Em seu ambiente -> no arquivo `src/enviroment/.env`).
 
@@ -92,7 +92,7 @@ Caso esteja utilizando o cliente HTTP [Postman], pode acessar [este link] para b
 ```
 
 ## Testes
-É possível executar uma rotina de testes no projeto, construídos com [Jest]. Para isso, execute o comando *npm test* e aguarde a execução dos testes unitários e de integração.
+É possível executar uma rotina de testes no projeto, construídos com [Jest] através do comando *npm test*. Após executar o comando, aguarde até que todos os testes unitários e de integração sejam finalizados e tenha um resultado similar ao abaixo.
 
 ```
 > lib_quality@1.0.0 test /home/usertech/Documents/pessoal/lib_quality
